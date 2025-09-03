@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang = "ja">
+<head>
+    <meta charset = "UTF-8">
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+    <title>おいつめゲーム</title>
+    <link rel = "stylesheet" href = "style.css">
+</head>
+<body>
+    <h1>おいつめゲーム</h1>
+    <div class = "controls">
+        <button id = "startBtn">ゲーム開始</button>
+        <button id = "resetBtn">リセット</button>
+        <button id = "howtoBtn">遊び方</button>
+
+        <label for = "cpuDifficulty" style = "display: flex; align-items: center; gap: 8px;"><select id = "cpuDifficulty"><option value = "easy">やさしい</option><option value = "hard">むずかしい</option></select></label>
+
+        <div class = "legend">
+            <div class = "small">・初期位置: 左上</div>
+            <div class = "small">・x印: 既に訪れたマス (移動不可)</div>
+            <div class = "small">・淡く光るマス: 現在のマスから移動可能</div>
+        </div>
+    </div>
+
+    <div class = "rules" aria-live = "polite">
+        <h3>ルール説明</h3>
+        <ul>
+            <li>盤面は5x5、初期位置は左上(0,0)のマス</li>
+            <li>先手(Player) -> 後手(CPU)で交互に移動。駒は周囲８方向に移動可</li>
+            <li>既に訪れたマスには移動不可 ( ✕ が付く)</li>
+            <li>移動できるマスは淡く光る</li>
+            <li>移動できるマスが無くなったら負け</li>
+            <li>(CPUの思考時間はおおよそ1秒弱)</li>
+        </ul>
+    </div>
+
+    <div class = "board-wrap">
+        <div id = "board" aria-hidden = "false"></div>
+        <div id = "thinking" class = "thinking-overlay" style = "display:none"><div class = "thinking-bubble">CPU が思考中 <span class="dots"><span></span><span></span><span></span></span></div></div>
+        <div id = "floating" class = "floating-piece" style = "display:none">♟︎</div>
+    </div>
+
+    <div class = "log" id = "log"></div>
+
+    <!-- スライド説明-->
+     <div id = "howto" class = "howto-overlay" role = "dialog" aria-modal="true" aria-hidden="true">
+        <div class = "howto-card" role = "document">
+            <div class = "howto-header">
+                <div class = "howto-title">遊び方 -スライド</div>
+                <div class = "howto-controls">
+                    <button id = "prevSlide">◀</button>
+                    <button id = "nextSlide">▶</button>
+                    <button id = "closeHowto">✕</button>
+                </div>
+            </div>
+
+            <div class = "howto-body">
+                <div class = "slides" id = "slides">
+                    <div class = "slide" aria-hidden="false">
+                        <div class = "text">
+                            <h3>基本ルール</h3>
+                            <p>駒は盤面の1マスから始まり、先手(Player)が動きます。移動は周囲8方向です。<strong>一度踏んだマスは二度と踏めません</strong>。先に動けなくなった方が負けです。</p>
+                        </div>
+                        <div class = "viz">
+                            <svg viewBox = "0 0 500 500" width = "260" height = "260" xmlns = "http://www.w3.org/2000/svg" aria-hidden="true">
+                                <defs>
+                                    <style>
+                                        .cell {fill : #fff ; stroke:#d1d5db; stroke-width:4;}
+                                        .start{fill : #dbeafe}
+                                    </style>
+                                </defs>
+                                <rect x = "0" y = "0" width = "500" height = "500" rx = "20" fill = "#f8fafc" stroke = "#e6e6e6" />
+                                <!--grid-->
+                                <g transform = "translate(20,20)">
+                                    <g>
+                                        <rect x = "0" y = "0" width = "88" height = "88" class = "start"/>
+                                        <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/> 
+                                        <g transform = "translate(0,100)">
+                                            <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                        </g>
+                                        <g transform = "translate(0,200)">
+                                            <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                        </g>
+                                        <g transform = "translate(0,300)">
+                                            <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                        </g>
+                                        <g transform = "translate(0,400)">
+                                            <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                            <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                        </g>
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class = "slide" aria-hidden="true">
+                        <div class = "text">
+                            <h3>移動例</h3>
+                            <p>駒は現在地(青)から周囲8マス(緑)へ移動できます。下図は (1,1) を現在地にした例です。</p>
+                        </div>
+                        <div class = "viz">
+                            <svg viewBox = "0 0 500 500" width = "260" height = "260" xmlns = "http://www.w3.org/2000/svg" aria-hidden="true">
+                                <defs>
+                                    <style>
+                                        .cell {fill : #fff ; stroke:#d1d5db; stroke-width:4;}
+                                        .cur{fill : #bfdbfe}
+                                        .can{fill:#d1fae5}
+                                    </style>
+                                </defs>
+                                <rect x = "0" y = "0" width = "500" height = "500" rx = "20" fill = "#f8fafc" stroke = "#e6e6e6" />
+                                <!--grid-->
+                                <g transform = "translate(20,20)">
+                                    <rect x = "0" y = "0" width = "88" height = "88" class = "can"/>
+                                    <rect x = "100" y = "0" width = "88" height = "88" class = "can"/>
+                                    <rect x = "200" y = "0" width = "88" height = "88" class = "can"/>
+                                    <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                    <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/> 
+                                    <g transform = "translate(0,100)">
+                                        <rect x = "0" y = "0" width = "88" height = "88" class = "can"/>
+                                        <rect x = "100" y = "0" width = "88" height = "88" class = "cur"/>
+                                        <rect x = "200" y = "0" width = "88" height = "88" class = "can"/>
+                                        <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                    </g>
+                                    <g transform = "translate(0,200)">
+                                        <rect x = "0" y = "0" width = "88" height = "88" class = "can"/>
+                                        <rect x = "100" y = "0" width = "88" height = "88" class = "can"/>
+                                        <rect x = "200" y = "0" width = "88" height = "88" class = "can"/>
+                                        <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                    </g>
+                                    <g transform = "translate(0,300)">
+                                        <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/> 
+                                        <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                    </g>
+                                    <g transform = "translate(0,400)">
+                                        <rect x = "0" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "100" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "200" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "300" y = "0" width = "88" height = "88" class = "cell"/>
+                                        <rect x = "400" y = "0" width = "88" height = "88" class = "cell"/>
+                                    </g>
+                                </g>    
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class = "slide" aria-hidden = "true">
+                        <div class = "text">
+                            <h3>訪問済みの扱い</h3>
+                            <p><strong>一度訪れたマスは二度と踏めません</strong>。訪問済みのマスはx印が付き、そこには入れません。開始マスも含みます。</p>
+                        </div>
+                        <div class = "viz">
+                            <svg viewBox = "0 0 500 500" width = "260" height = "260" xmlns = "http://www.w3.org/2000/svg" aria-hidden="true">
+                                <defs>
+                                    <style>
+                                        .cell {fill : #fff ; stroke:#d1d5db; stroke-width:4;}
+                                        .visited {fill : #fff}
+                                        .mark {font-size: 36px; fill : #ef4444}
+                                    </style>
+                                </defs>
+                                <rect x = "0" y = "0" width = "500" height = "500" rx = "20" fill = "#f8fafc" stroke = "#e6e6e6" />
+                                <!--grid-->
+                                <g transform = "translate(20,20)">
+                                    <!--3*3のサイズのみ-->
+                                    <rect x = "100" y = "100" width = "88" height = "88" class = "cell"/>
+                                    <rect x = "200" y = "100" width = "88" height = "88" class = "cell"/>
+                                    <rect x = "300" y = "100" width = "88" height = "88" class = "cell"/>
+                                    <rect x = "100" y = "200" width = "88" height = "88" class = "cell"/>
+                                    <rect x = "200" y = "200" width = "88" height = "88" class = "cell visited"/>
+                                    <text x = "244" y = "254" class = "mark" text-anchor="middle">✕</text>
+                                    <rect x = "300" y = "200" width = "88" height = "88" class = "cell"/>
+                                </g>
+                            </svg>        
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class = "nav">
+                <div id = "dots"></div>
+            </div>
+
+        </div>
+     </div>
+    
+     <div id = "gameOver" class = "gameover-overlay" aria-hidden="true">
+        <div class = "gameover-card" role = "alertdialog" aria-modal = "true">
+            <div class = "gameover-title" id = "gameOverTitle">ゲーム終了</div>
+            <div class = "gameover-sub" id = "gameOverSub">勝者: CPU</div>
+            <div class = "gameover-actions">
+                <button id = "backToTitle">タイトルに戻る</button>
+            </div>
+        </div>
+     </div>
+    <script src = "script.js"></script>
+</body>
+</html>
